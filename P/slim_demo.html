@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLIM Cipher — Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --accent: #7c6af7;
+    --accent2: #a78bfa;
+    --accent3: #c4b5fd;
+    --teal: #2dd4bf;
+    --teal2: #5eead4;
+    --rose: #fb7185;
+    --amber: #fbbf24;
+    --text: #f1f0ff;
+    --muted: #8b8aad;
+    --faint: #3d3d5c;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.18;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; right: -100px; }
+  .orb-2 { width: 400px; height: 400px; background: var(--teal); bottom: -100px; left: -100px; }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 3.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .logo-area { display: flex; flex-direction: column; gap: 6px; }
+
+  .logo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--accent2), var(--teal2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-top: 8px;
+  }
+
+  .badge-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start; padding-top: 8px; }
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    background: var(--surface);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge.accent { border-color: rgba(124,106,247,0.4); color: var(--accent3); background: rgba(124,106,247,0.1); }
+
+  /* Section titles */
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(124,106,247,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* Inputs */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  input[type=text] {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input[type=text]::placeholder { color: var(--faint); }
+  input[type=text]:focus {
+    border-color: rgba(124,106,247,0.5);
+    box-shadow: 0 0 0 3px rgba(124,106,247,0.1);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 22px;
+    border-radius: var(--radius-sm);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+
+  .btn-teal {
+    background: transparent;
+    border: 1px solid rgba(45,212,191,0.4);
+    color: var(--teal2);
+  }
+  .btn-teal:hover { background: rgba(45,212,191,0.08); }
+
+  .btn-rose {
+    background: transparent;
+    border: 1px solid rgba(251,113,133,0.4);
+    color: var(--rose);
+  }
+  .btn-rose:hover { background: rgba(251,113,133,0.08); }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  /* Output box */
+  .output-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    min-height: 44px;
+    word-break: break-all;
+    line-height: 1.6;
+    color: var(--text);
+    transition: border-color 0.3s;
+    position: relative;
+  }
+  .output-box.enc { border-color: rgba(124,106,247,0.35); color: var(--accent3); }
+  .output-box.dec { border-color: rgba(45,212,191,0.35); color: var(--teal2); }
+  .output-box.err { border-color: rgba(251,113,133,0.35); color: var(--rose); }
+  .output-box.empty { color: var(--faint); }
+
+  .out-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .out-label.enc { color: var(--accent); }
+  .out-label.dec { color: var(--teal); }
+  .out-label.err { color: var(--rose); }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: 4px 0;
+    scrollbar-width: none;
+  }
+  .pipeline::-webkit-scrollbar { display: none; }
+  .pipe-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+  }
+  .pipe-node {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    white-space: nowrap;
+    transition: all 0.3s;
+    letter-spacing: 0.04em;
+  }
+  .pipe-node.active {
+    background: rgba(124,106,247,0.18);
+    border-color: rgba(124,106,247,0.5);
+    color: var(--accent3);
+    box-shadow: 0 0 16px rgba(124,106,247,0.2);
+  }
+  .pipe-arrow {
+    color: var(--faint);
+    font-size: 14px;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  /* Nibble visualizer */
+  .nibbles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .nibble {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.4s;
+    letter-spacing: 0;
+  }
+  .nibble.lit {
+    background: rgba(124,106,247,0.2);
+    border-color: rgba(124,106,247,0.5);
+    color: var(--accent3);
+    transform: scale(1.08);
+  }
+
+  /* Sbox table */
+  .sbox-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; }
+  .sbox-table th {
+    text-align: center;
+    padding: 5px 6px;
+    color: var(--muted);
+    font-weight: 400;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.05em;
+  }
+  .sbox-table td {
+    text-align: center;
+    padding: 5px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .sbox-table td:hover { background: rgba(124,106,247,0.15); color: var(--accent3); }
+  .sbox-table td.hl { background: rgba(124,106,247,0.25); color: var(--accent3); font-weight: 700; }
+
+  /* Separator */
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* Wrong key notice */
+  .notice {
+    font-size: 11px;
+    margin-top: 8px;
+    font-family: var(--mono);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    display: none;
+  }
+  .notice.show { display: block; }
+  .notice.bad { background: rgba(251,113,133,0.1); border: 1px solid rgba(251,113,133,0.25); color: var(--rose); }
+  .notice.good { background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.25); color: var(--teal2); }
+
+  /* Stats row */
+  .stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .stat {
+    flex: 1;
+    min-width: 110px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .stat-val { font-size: 22px; font-weight: 800; color: var(--accent2); line-height: 1; }
+  .stat-lbl { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* Footer */
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  footer p { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+  footer strong { color: var(--muted); font-weight: 400; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card, .stats, header { animation: fadeUp 0.5s ease both; }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.12s; }
+  .card:nth-child(3) { animation-delay: 0.19s; }
+
+  .copy-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .output-box:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { color: var(--text); }
+
+  .gap { margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrapper">
+
+  <header>
+    <div class="logo-area">
+      <span class="logo">CSE461 · MSA University · Spring 2026</span>
+      <h1>SLIM <span>Cipher</span></h1>
+      <p class="subtitle">// lightweight block cipher · live interactive demo</p>
+    </div>
+    <div class="badge-group">
+      <span class="badge accent">80-bit key</span>
+      <span class="badge accent">32-bit block</span>
+      <span class="badge">32 rounds</span>
+      <span class="badge">Feistel network</span>
+      <span class="badge">SP-network</span>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-val">32</span>
+      <span class="stat-lbl">Feistel rounds</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">80</span>
+      <span class="stat-lbl">Key bits</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">16</span>
+      <span class="stat-lbl">S-box entries</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">16</span>
+      <span class="stat-lbl">P-box bits</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="block-count">—</span>
+      <span class="stat-lbl">Blocks used</span>
+    </div>
+  </div>
+
+  <!-- Encrypt / Decrypt card -->
+  <div class="card gap">
+    <div class="section-title">Encrypt &amp; Decrypt</div>
+
+    <div class="grid-2" style="margin-bottom:14px;">
+      <div class="field">
+        <label>Plaintext</label>
+        <input type="text" id="pt" value="hello world" placeholder="Enter any text…">
+      </div>
+      <div class="field">
+        <label>Secret key (max 10 chars)</label>
+        <input type="text" id="key" value="mysecretkey" placeholder="Enter key…" maxlength="10">
+      </div>
+    </div>
+
+    <!-- Pipeline -->
+    <div class="section-title">Encryption pipeline</div>
+    <div class="pipeline" id="pipeline">
+      <div class="pipe-step"><div class="pipe-node" id="p0">Text → blocks</div><div class="pipe-arrow">›</div></div>
+      <div class="pipe-step"><div class="pipe-node" id="p1">Key schedule</div><div class="pipe-arrow">›</div></div>
+      <div class="pipe-step"><div class="pipe-node" id="p2">S-box sub</div><div class="pipe-arrow">›</div></div>
+      <div class="pipe-step"><div class="pipe-node" id="p3">P-box perm</div><div class="pipe-arrow">›</div></div>
+      <div class="pipe-step"><div class="pipe-node" id="p4">Feistel XOR</div><div class="pipe-arrow">›</div></div>
+      <div class="pipe-step"><div class="pipe-node" id="p5">Ciphertext ✓</div></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runEncrypt()">&#9654; Encrypt</button>
+      <button class="btn btn-teal" onclick="runDecrypt()">&#10227; Decrypt</button>
+      <button class="btn btn-rose" onclick="clearAll()">&#215; Clear</button>
+    </div>
+  </div>
+
+  <!-- Output card -->
+  <div class="card gap">
+    <div class="section-title">Output</div>
+    <div class="grid-2">
+      <div>
+        <div class="out-label enc">Ciphertext (hex)</div>
+        <div class="output-box enc empty" id="out-enc">
+          — run encrypt first —
+          <button class="copy-btn" onclick="copyText('out-enc')">copy</button>
+        </div>
+        <div class="nibbles" id="nibbles"></div>
+      </div>
+      <div>
+        <div class="out-label dec">Decrypted plaintext</div>
+        <div class="output-box dec empty" id="out-dec">
+          — run decrypt to verify —
+          <button class="copy-btn" onclick="copyText('out-dec')">copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wrong key test -->
+  <div class="card gap">
+    <div class="section-title">Wrong key attack demo</div>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:14px; font-family:var(--mono); line-height:1.6;">
+      Attempt to decrypt the ciphertext above using an incorrect key.<br>Demonstrates why the key is essential to the cipher.
+    </p>
+    <div class="field" style="max-width:340px;">
+      <label>Wrong key (try anything)</label>
+      <input type="text" id="badkey" value="wrongkeyxx" maxlength="10" placeholder="Different key…">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-rose" onclick="runBadKey()">&#9656; Try wrong key</button>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="out-label err">Attempted decryption output</div>
+      <div class="output-box err empty" id="out-bad">— enter a wrong key and try —</div>
+    </div>
+    <div class="notice" id="notice-bad"></div>
+  </div>
+
+  <!-- S-box visualizer -->
+  <div class="card gap">
+    <div class="section-title">S-box (substitution table)</div>
+    <p style="font-size:13px; color:var(--muted); font-family:var(--mono); margin-bottom:14px; line-height:1.6;">
+      Every 4-bit nibble in the block is replaced using this lookup table.<br>Hover a cell to see the substitution. Input → Output (hex).
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="sbox-table" id="sbox-table">
+        <thead>
+          <tr>
+            <th>in</th>
+            <th>0</th><th>1</th><th>2</th><th>3</th>
+            <th>4</th><th>5</th><th>6</th><th>7</th>
+            <th>8</th><th>9</th><th>A</th><th>B</th>
+            <th>C</th><th>D</th><th>E</th><th>F</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="sbox-row">
+            <th>out</th>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:10px; color:var(--faint); font-family:var(--mono); margin-top:10px;">Highlighted cells reflect the nibbles active in the last encryption.</p>
+  </div>
+
+  <hr>
+
+  <footer>
+    <p><strong>SLIM Block Cipher</strong> — CSE461 Computer Security · MSA University · Spring 2026</p>
+    <p>80-bit key · 32-bit block · 32-round Feistel · SP-network</p>
+  </footer>
+
+</div>
+
+<script>
+const SBOX=[0xC,0x5,0x6,0xB,0x9,0x0,0xA,0xD,0x3,0xE,0xF,0x8,0x4,0x7,0x1,0x2];
+const PBOX=[7,13,1,8,11,14,2,5,4,10,15,0,3,6,9,12];
+
+function applySbox(v){let o=0;for(let i=0;i<4;i++){let n=(v>>(i*4))&0xF;o|=SBOX[n]<<(i*4);}return o;}
+function applyPbox(v){let o=0;for(let i=0;i<16;i++){let b=(v>>i)&1;o|=b<<PBOX[i];}return o;}
+
+function getSubkeys(key){
+  const keys=[];
+  const bk=BigInt(key);
+  let lsb=Number(bk&0xFFFFFFFFFFn);
+  let msb=Number((bk>>40n)&0xFFFFFFFFFFn);
+  for(let i=0;i<5;i++) keys.push(Number((bk>>BigInt(i*16))&0xFFFFn));
+  for(let _=0;_<27;_++){
+    lsb=((lsb<<2)|(lsb>>>38))&0xFFFFFFFF;
+    msb=((msb<<3)|(msb>>>37))&0xFFFFFFFF;
+    const tmp=applySbox((lsb^msb)&0xFFFF);
+    keys.push(tmp^(msb&0xFFFF));
+  }
+  return keys;
+}
+
+function feistel(block,keys){
+  let L=(block>>>16)&0xFFFF,R=block&0xFFFF;
+  for(const k of keys){const tmp=applyPbox(applySbox(R^k));[L,R]=[R,L^tmp];}
+  return((R<<16)|L)>>>0;
+}
+
+function keyToInt(k){
+  k=(k+"          ").slice(0,10);
+  let v=BigInt(0);
+  for(const c of k) v=(v<<8n)|BigInt(c.charCodeAt(0));
+  return v;
+}
+
+function textToBlocks(t){
+  while(t.length%4!==0) t+=' ';
+  const blocks=[];
+  for(let i=0;i<t.length;i+=4){
+    let b=0;
+    for(const c of t.slice(i,i+4)) b=(b<<8)|c.charCodeAt(0);
+    blocks.push(b>>>0);
+  }
+  return blocks;
+}
+
+function blocksToText(blocks){
+  let t='';
+  for(const b of blocks) for(let i=3;i>=0;i--) t+=String.fromCharCode((b>>(i*8))&0xFF);
+  return t.replace(/ +$/,'');
+}
+
+let lastEnc=null;
+
+async function animatePipeline(){
+  for(let i=0;i<6;i++){
+    for(let j=0;j<6;j++) document.getElementById('p'+j).classList.remove('active');
+    document.getElementById('p'+i).classList.add('active');
+    await delay(220);
+  }
+  for(let j=0;j<6;j++) document.getElementById('p'+j).classList.remove('active');
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function setOutput(id,text,cls){
+  const el=document.getElementById(id);
+  el.className='output-box '+cls;
+  const btn=el.querySelector('.copy-btn');
+  el.textContent=text;
+  if(btn) el.appendChild(btn);
+}
+
+let activeNibbles=[];
+
+function renderNibbles(hexStr){
+  const container=document.getElementById('nibbles');
+  container.innerHTML='';
+  activeNibbles=[];
+  const chars=hexStr.replace(/ /g,'').toUpperCase();
+  for(let i=0;i<chars.length;i++){
+    const d=document.createElement('div');
+    d.className='nibble';
+    d.id='nib'+i;
+    d.textContent=chars[i];
+    container.appendChild(d);
+  }
+  // animate nibbles
+  chars.split('').forEach((_,i)=>{
+    setTimeout(()=>{
+      const el=document.getElementById('nib'+i);
+      if(el){el.classList.add('lit');setTimeout(()=>el.classList.remove('lit'),800);}
+    },i*30);
+  });
+  // collect hex pairs as nibble indices
+  for(let i=0;i<chars.length;i+=2){
+    activeNibbles.push(parseInt(chars[i],16));
+  }
+  highlightSbox(activeNibbles);
+}
+
+function highlightSbox(idxs){
+  document.querySelectorAll('#sbox-row td').forEach(td=>td.classList.remove('hl'));
+  for(const idx of idxs){
+    const td=document.getElementById('sb'+idx);
+    if(td) td.classList.add('hl');
+  }
+}
+
+async function runEncrypt(){
+  const pt=document.getElementById('pt').value||'hello';
+  const key=document.getElementById('key').value||'mysecretkey';
+  setOutput('out-enc','encrypting…','enc');
+  setOutput('out-dec','— run decrypt to verify —','dec empty');
+  document.getElementById('nibbles').innerHTML='';
+  await animatePipeline();
+  const k=keyToInt(key);
+  const blocks=textToBlocks(pt);
+  lastEnc=blocks.map(b=>feistel(b,getSubkeys(k)));
+  const hexStr=lastEnc.map(b=>b.toString(16).padStart(8,'0')).join(' ');
+  setOutput('out-enc',hexStr,'enc');
+  document.getElementById('block-count').textContent=blocks.length;
+  renderNibbles(hexStr);
+}
+
+function runDecrypt(){
+  if(!lastEnc){alert('Encrypt something first!');return;}
+  const key=document.getElementById('key').value||'mysecretkey';
+  const k=keyToInt(key);
+  const dec=blocksToText(lastEnc.map(b=>feistel(b,getSubkeys(k).reverse())));
+  setOutput('out-dec',dec,'dec');
+}
+
+function runBadKey(){
+  if(!lastEnc){alert('Encrypt something first!');return;}
+  const badkey=document.getElementById('badkey').value||'wrongkeyxx';
+  const key=document.getElementById('key').value||'mysecretkey';
+  const k=keyToInt(badkey);
+  const dec=blocksToText(lastEnc.map(b=>feistel(b,getSubkeys(k).reverse())));
+  setOutput('out-bad',dec,'err');
+  const noticeEl=document.getElementById('notice-bad');
+  if(dec.trim()===document.getElementById('pt').value.trim()){
+    noticeEl.textContent='⚠ Keys matched — the output is correct. Try a truly different key.';
+    noticeEl.className='notice show good';
+  } else {
+    noticeEl.textContent='✓ Confirmed: wrong key produces unreadable garbage — the cipher is working correctly.';
+    noticeEl.className='notice show bad';
+  }
+}
+
+function clearAll(){
+  setOutput('out-enc','— run encrypt first —','enc empty');
+  setOutput('out-dec','— run decrypt to verify —','dec empty');
+  setOutput('out-bad','— enter a wrong key and try —','err empty');
+  document.getElementById('nibbles').innerHTML='';
+  document.getElementById('block-count').textContent='—';
+  document.getElementById('notice-bad').className='notice';
+  lastEnc=null;
+  document.querySelectorAll('#sbox-row td').forEach(td=>td.classList.remove('hl'));
+}
+
+function copyText(id){
+  const el=document.getElementById(id);
+  const btn=el.querySelector('.copy-btn');
+  const txt=el.childNodes[0]?el.childNodes[0].textContent.trim():'';
+  if(!txt||txt.startsWith('—')) return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    if(btn){const orig=btn.textContent;btn.textContent='copied!';setTimeout(()=>btn.textContent=orig,1500);}
+  });
+}
+
+// Build S-box table
+(function(){
+  const row=document.getElementById('sbox-row');
+  for(let i=0;i<16;i++){
+    const td=document.createElement('td');
+    td.textContent=SBOX[i].toString(16).toUpperCase();
+    td.id='sb'+i;
+    td.title='S['+i.toString(16).toUpperCase()+'] = '+SBOX[i].toString(16).toUpperCase();
+    row.appendChild(td);
+  }
+})();
+</script>
+</body>
+</html>
