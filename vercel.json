@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/P/slim_demo.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/P/slim_demo.html"
+    }
+  ]
+}
